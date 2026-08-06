@@ -1,10 +1,10 @@
-# 🛠️ OX Cloner - Discord Server Cloner
+# 🛠️ ObsCloner - Discord Server Cloner
 
 ![Version](https://img.shields.io/badge/version-1.5.2-white?style=for-the-badge)
 ![Tech](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
 ![Design](https://img.shields.io/badge/Design-Brutalist-white?style=for-the-badge)
 
-**OX Cloner** is a professional cloning engine with a modern brutalist interface, designed to replicate Discord servers down to the last pixel. It combines security, speed, and ease of use to take server management to the next level.
+**ObsCloner** is a professional cloning engine with a modern brutalist interface, designed to replicate Discord servers down to the last pixel. It combines security, speed, and ease of use to take server management to the next level.
 
 ---
 
@@ -33,8 +33,8 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/OxironDev/OX-Cloner.git
-   cd OX-Cloner
+   git clone https://github.com/ObsessiveInc/ObsCloner.git
+   cd ObsCloner
    ```
 
 2. Install dependencies:
@@ -76,5 +76,5 @@ If you'd like to contribute, feel free to open a *Pull Request* or report a bug.
 ---
 
 <p align="center">
-  <b>© 2026 Oxiron Development • Premium Cloner Engine</b>
+  <b>© 2026 Obsessive Inc. • Premium Cloner Engine</b>
 </p>
