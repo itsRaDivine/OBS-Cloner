@@ -1,13 +1,13 @@
 :root {
-  --background: #09090b;
+  --background: #000000;
   --foreground: #ffffff;
-  --primary: #a855f7;
-  --primary-hover: #9333ea;
-  --secondary: #111114;
-  --accent: #6366f1;
-  --glass-border: #27272a;
-  --error: #ff4444;
-  --success: #00ff88;
+  --primary: #ffffff;
+  --primary-hover: #e0e0e0;
+  --secondary: #0a0a0a;
+  --accent: #666666;
+  --glass-border: #222222;
+  --error: #ff0000;
+  --success: #ffffff;
 }
 
 * {
