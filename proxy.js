@@ -24,7 +24,7 @@ export function proxy(request) {
 
   // Get locale from cookie if exists
   let locale = defaultLocale;
-  const cookieLocale = request.cookies.get('oxiron_lang')?.value;
+  const cookieLocale = request.cookies.get('obscloner_lang')?.value;
 
   if (cookieLocale && locales.includes(cookieLocale)) {
     locale = cookieLocale;
@@ -46,7 +46,7 @@ export function proxy(request) {
   const response = NextResponse.redirect(request.nextUrl);
   // Optional: Set cookie if it was automatically detected
   if (!cookieLocale) {
-    response.cookies.set('oxiron_lang', locale);
+    response.cookies.set('obscloner_lang', locale);
   }
   return response;
 }
