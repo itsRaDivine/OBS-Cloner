@@ -13,37 +13,37 @@ export default function ContactPage() {
     tr: {
       p1: "Sorularınız veya iş birliği talepleriniz için bize ulaşabilirsiniz.",
       p2: "Destek ekibimize e-posta gönderin:",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     },
     en: {
       p1: "You can reach us for your questions or collaboration requests.",
       p2: "Email our support team:",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     },
     es: {
       p1: "Puede contactarnos para sus preguntas o solicitudes de colaboración.",
       p2: "Envíe un correo electrónico a nuestro equipo de soporte:",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     },
     fr: {
       p1: "Vous pouvez nous contacter pour vos questions ou demandes de collaboration.",
       p2: "Envoyez un e-mail à notre équipe de support :",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     },
     de: {
       p1: "Sie können uns für Ihre Fragen oder Kooperationsanfragen erreichen.",
       p2: "Senden Sie eine E-Mail an unser Support-Team:",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     },
     pt: {
       p1: "Você pode nos contatar para suas dúvidas ou solicitações de colaboração.",
       p2: "Envie um e-mail para nossa equipe de suporte:",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     },
     it: {
       p1: "Puoi contattarci per le tue domande o richieste di collaborazione.",
       p2: "Invia un'e-mail al nostro team di supporto:",
-      email: "support@oxirondev.com"
+      email: "support@aiobsessive.com"
     }
   };
 
