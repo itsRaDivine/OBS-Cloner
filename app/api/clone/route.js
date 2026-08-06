@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cloneGuild } from '@/lib/cloner';
+import { addHistoryEntry } from '@/lib/history';
 
 let activeClones = 0;
 const MAX_CONCURRENT_CLONES = 10;
@@ -63,7 +64,8 @@ export async function POST(request) {
       }, GLOBAL_TIMEOUT_MS);
 
       try {
-        await cloneGuild(userToken, {
+        const startTime = Date.now();
+        const result = await cloneGuild(userToken, {
           sourceGuildId,
           targetGuildId,
           resetTargetServer: resetTargetServer || false,
@@ -71,8 +73,30 @@ export async function POST(request) {
         }, (progress) => {
           send(progress);
         });
+
+        // Başarılı klonlama geçmişe kaydedilir
+        addHistoryEntry({
+          sourceGuildId,
+          sourceGuildName: result?.sourceGuildName,
+          targetGuildId,
+          targetGuildName: result?.targetGuildName,
+          status: 'success',
+          rolesCloned: result?.rolesCloned,
+          categoriesCloned: result?.categoriesCloned,
+          channelsCloned: result?.channelsCloned,
+          emojisCloned: result?.emojisCloned,
+          durationMs: Date.now() - startTime
+        });
       } catch (err) {
         send({ error: err.message });
+
+        // Hatalı klonlama da geçmişe kaydedilir
+        addHistoryEntry({
+          sourceGuildId,
+          targetGuildId,
+          status: 'error',
+          errorMessage: err.message
+        });
       } finally {
         isClosed = true;
         try {
