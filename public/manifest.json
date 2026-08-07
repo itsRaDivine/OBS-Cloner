@@ -1,6 +1,6 @@
 {
-  "name": "OBS CLONER",
-  "short_name": "OBS CLONER",
+  "name": "OBS Cloner",
+  "short_name": "OBS Cloner",
   "description": "Discord sunucularınızı saniyeler içinde profesyonelce klonlayın. Roller, kanallar, emojiler ve daha fazlası tek tıkla kopyalanır.",
   "start_url": "/tr",
   "display": "standalone",
