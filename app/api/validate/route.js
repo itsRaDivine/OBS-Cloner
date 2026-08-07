@@ -51,7 +51,7 @@ export async function POST(request) {
       }
 
       client.disconnect();
-      resolve(new Response(JSON.stringify({ success: true }), { status: 200 }));
+      resolve(new Response(JSON.stringify({ success: true, userId: client.user.id }), { status: 200 }));
     });
 
     client.connect();
