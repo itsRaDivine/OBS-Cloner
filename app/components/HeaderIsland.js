@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function HeaderIsland() {
   const params = useParams();
@@ -18,12 +17,12 @@ export default function HeaderIsland() {
 
   return (
     <header className="header-island">
-      <Link href={`/${lang}`} className="logo-link">
+      <a href="https://aiobsessive.com" className="logo-link" title="ObsessiveAI Platformuna Git">
         <div className="logo-section">
           <img src="/favicon.ico" alt="Logo" className="logo-img" />
-          <span className="site-name">OBSCLONER</span>
+          <span className="site-name">OBS CLONER</span>
         </div>
-      </Link>
+      </a>
 
       <div className="spacer"></div>
 
