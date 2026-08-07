@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cloneGuild } from '@/lib/cloner';
 import { addHistoryEntry } from '@/lib/history';
+import { checkAndConsume } from '@/lib/ratelimit';
 
 let activeClones = 0;
 const MAX_CONCURRENT_CLONES = 10;
@@ -69,7 +70,8 @@ export async function POST(request) {
           sourceGuildId,
           targetGuildId,
           resetTargetServer: resetTargetServer || false,
-          lang: lang
+          lang: lang,
+          checkRateLimit: checkAndConsume
         }, (progress) => {
           send(progress);
         });
@@ -88,7 +90,15 @@ export async function POST(request) {
           durationMs: Date.now() - startTime
         });
       } catch (err) {
-        send({ error: err.message });
+        if (err.code === 'RATE_LIMITED') {
+          send({
+            error: 'RATE_LIMITED',
+            resetAt: err.resetAt,
+            message: err.message
+          });
+        } else {
+          send({ error: err.message });
+        }
 
         // Hatalı klonlama da geçmişe kaydedilir
         addHistoryEntry({
