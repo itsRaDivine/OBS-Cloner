@@ -5,12 +5,39 @@ import HeaderIsland from "../components/HeaderIsland";
 export async function generateMetadata({ params }) {
   const { lang } = await params;
   const t = translations[lang] || translations.tr;
+  const baseUrl = "https://obscloner.vercel.app";
 
   return {
-    title: t.seoTitle || "OX Cloner",
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: t.seoTitle || "OBS CLONER — Premium Discord Server Copy Engine",
+      template: "%s | OBS CLONER"
+    },
     description: t.seoDescription || "Premium Discord Server Copy Engine",
-    keywords: "Discord Cloner, OX Cloner, Discord Server Copy, Discord Backup, Discord Tool, Server Cloner",
+    keywords: "Discord Cloner, OBS CLONER, Discord Server Copy, Discord Backup, Discord Tool, Server Cloner, Discord Sunucu Kopyalama, Discord Yedekleme, Obsessive",
     robots: "index, follow",
+    authors: [{ name: "Obsessive Inc." }],
+    creator: "Obsessive Inc.",
+    publisher: "Obsessive Inc.",
+    manifest: "/manifest.json",
+    icons: {
+      icon: "/favicon.ico",
+      shortcut: "/favicon.ico",
+      apple: "/favicon.ico"
+    },
+    openGraph: {
+      title: t.seoTitle || "OBS CLONER — Premium Discord Server Copy Engine",
+      description: t.seoDescription || "Discord sunucularınızı saniyeler içinde profesyonelce klonlayın.",
+      url: `${baseUrl}/${lang}`,
+      siteName: "OBS CLONER",
+      locale: lang,
+      type: "website"
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.seoTitle || "OBS CLONER",
+      description: t.seoDescription || "Premium Discord Server Copy Engine"
+    },
     alternates: {
       canonical: `/${lang}`,
       languages: {

@@ -27,6 +27,8 @@ export default function Home() {
   const [serverInfo, setServerInfo] = useState(null);
   const [logs, setLogs] = useState([]);
   const [showToken, setShowToken] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [rateLimitInfo, setRateLimitInfo] = useState(null);
   const logRef = useRef(null);
 
 
@@ -66,6 +68,10 @@ export default function Home() {
         if (valData.error === 'NO_ADMIN') throw new Error(t.errorNoAdmin);
         if (valData.error === 'GUILD_NOT_FOUND') throw new Error(t.error);
         throw new Error(valData.error || t.error);
+      }
+
+      if (valData.userId) {
+        setCurrentUserId(valData.userId);
       }
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -113,6 +119,14 @@ export default function Home() {
             const data = JSON.parse(line.replace('data: ', ''));
             if (data.message === 'DONE') {
               setStatus({ type: 'success', message: t.success });
+            } else if (data.error === 'RATE_LIMITED') {
+              const resetDate = data.resetAt ? new Date(data.resetAt) : null;
+              const timeStr = resetDate
+                ? resetDate.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })
+                : '';
+              const msg = t.errorRateLimit + (timeStr ? ` (${t.rateLimitResetAt || 'Sıfırlanma'}: ${timeStr})` : '');
+              setStatus({ type: 'error', message: msg });
+              setRateLimitInfo({ resetAt: data.resetAt });
             } else if (data.error) {
               setStatus({ type: 'error', message: data.error });
             } else {
