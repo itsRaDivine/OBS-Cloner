@@ -1,10 +1,10 @@
-# 🛠️ ObsCloner - Discord Server Cloner
+# 🛠️ OBS CLONER - Discord Server Cloner
 
 ![Version](https://img.shields.io/badge/version-1.5.2-white?style=for-the-badge)
 ![Tech](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
 ![Design](https://img.shields.io/badge/Design-Brutalist-white?style=for-the-badge)
 
-**ObsCloner** is a professional cloning engine with a modern brutalist interface, designed to replicate Discord servers down to the last pixel. It combines security, speed, and ease of use to take server management to the next level.
+**OBS CLONER** is a professional cloning engine with a modern brutalist interface, designed to replicate Discord servers down to the last pixel. It combines security, speed, and ease of use to take server management to the next level.
 
 ---
 
@@ -33,8 +33,8 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/ObsessiveInc/ObsCloner.git
-   cd ObsCloner
+   git clone https://github.com/ObsessiveInc/OBS CLONER.git
+   cd OBS CLONER
    ```
 
 2. Install dependencies:
