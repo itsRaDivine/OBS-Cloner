@@ -21,9 +21,18 @@ export async function generateMetadata({ params }) {
     publisher: "Obsessive Inc.",
     manifest: "/manifest.json",
     icons: {
-      icon: "/favicon.ico",
+      icon: [
+        { url: "/favicon.ico" },
+        { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" }
+      ],
       shortcut: "/favicon.ico",
-      apple: "/favicon.ico"
+      apple: "/apple-touch-icon.png"
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "OBS CLONER"
     },
     openGraph: {
       title: t.seoTitle || "OBS CLONER — Premium Discord Server Copy Engine",
@@ -61,11 +70,27 @@ export async function generateStaticParams() {
   return ['tr', 'en', 'es', 'fr', 'de', 'pt', 'it', 'ru', 'ja', 'ar', 'id'].map((lang) => ({ lang }));
 }
 
+export function generateViewport() {
+  return {
+    themeColor: "#000000",
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false
+  };
+}
+
 export default async function RootLayout({ children, params }) {
   const { lang } = await params;
   return (
     <html lang={lang || "en"}>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="OBS CLONER" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet" />

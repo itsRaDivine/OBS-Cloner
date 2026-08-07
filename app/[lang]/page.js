@@ -72,6 +72,18 @@ export default function Home() {
 
       if (valData.userId) {
         setCurrentUserId(valData.userId);
+        // Kalan hakkı sorgula (sadece görüntüleme amaçlı, gerçek limit /api/clone içinde kontrol edilir)
+        try {
+          const rlRes = await fetch('/api/ratelimit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: valData.userId, password: formData.password })
+          });
+          if (rlRes.ok) {
+            const rlData = await rlRes.json();
+            setRateLimitInfo(rlData);
+          }
+        } catch (e) { /* sessizce geç, kritik değil */ }
       }
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -275,6 +287,20 @@ export default function Home() {
               {fastMode && (
                 <div className="fast-mode-warn">
                   ⚠️ {t.fastModeWarn}
+                </div>
+              )}
+              {rateLimitInfo && typeof rateLimitInfo.remaining === 'number' && (
+                <div className="rate-limit-badge">
+                  <span>{t.rateLimitRemaining || 'Kalan hak'}:</span>
+                  <div className="rate-limit-dots">
+                    {Array.from({ length: rateLimitInfo.limit || 5 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`rate-limit-dot ${i < rateLimitInfo.remaining ? 'filled' : ''}`}
+                      />
+                    ))}
+                  </div>
+                  <span>{rateLimitInfo.remaining}/{rateLimitInfo.limit || 5}</span>
                 </div>
               )}
               <div className="actions">
