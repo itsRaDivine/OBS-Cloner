@@ -331,11 +331,11 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-              <div className="form-group">
+              <div className="form-group full-width">
                 <label>{t.sourceGuildId}</label>
                 <input type="text" name="sourceGuildId" placeholder={t.sourcePlaceholder} value={formData.sourceGuildId} onChange={handleChange} required />
               </div>
-              <div className="form-group">
+              <div className="form-group full-width">
                 <label>{t.targetGuildId}</label>
                 <input type="text" name="targetGuildId" placeholder={t.targetPlaceholder} value={formData.targetGuildId} onChange={handleChange} required />
               </div>
