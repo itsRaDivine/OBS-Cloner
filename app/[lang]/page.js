@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { translations } from '@/lib/translations';
+import { useCloneStatus } from '@/lib/context/CloneStatusContext';
 
 export default function Home() {
   const params = useParams();
@@ -20,6 +21,16 @@ export default function Home() {
     rateLimitDelay: 1000
   });
 
+  const [cloneOptions, setCloneOptions] = useState({
+    cloneRoles: true,
+    cloneChannels: true,
+    cloneEmojis: true,
+    cloneServerIcon: true,
+    cloneServerBanner: true,
+    cloneServerName: true
+  });
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const [fastMode, setFastMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -30,7 +41,28 @@ export default function Home() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [rateLimitInfo, setRateLimitInfo] = useState(null);
   const logRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const { setIsCloning } = useCloneStatus();
 
+  // Global context'e loading durumunu yansıt — HeaderIsland bunu okuyup
+  // dil değiştirme/logo tıklama gibi navigasyonları engelleyecek.
+  useEffect(() => {
+    setIsCloning(loading);
+  }, [loading, setIsCloning]);
+
+  // Sayfa/işlem devam ederken kullanıcı sekmeyi kapatmaya veya
+  // yenilemeye çalışırsa uyarı göster — kaza ile klonlamayı yarıda kesmesin.
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (loading) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [loading]);
 
   const fetchInfo = async () => {
     if (!formData.userToken || !formData.sourceGuildId || !formData.targetGuildId) return;
@@ -46,6 +78,12 @@ export default function Home() {
       }
     } catch (err) {
       setServerInfo(null);
+    }
+  };
+
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
@@ -99,11 +137,15 @@ export default function Home() {
     setLogs([]);
     setStatus({ type: 'info', message: t.cloningStarted });
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
       const response = await fetch('/api/clone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, lang }),
+        body: JSON.stringify({ ...formData, lang, cloneOptions }),
+        signal: abortController.signal
       });
 
       if (!response.ok) {
@@ -119,7 +161,7 @@ export default function Home() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          setStatus({ type: 'success', message: t.success }); // Force success at the end
+          setStatus(prev => (prev && prev.type === 'error') ? prev : { type: 'success', message: t.success });
           break;
         }
 
@@ -139,6 +181,8 @@ export default function Home() {
               const msg = t.errorRateLimit + (timeStr ? ` (${t.rateLimitResetAt || 'Sıfırlanma'}: ${timeStr})` : '');
               setStatus({ type: 'error', message: msg });
               setRateLimitInfo({ resetAt: data.resetAt });
+            } else if (data.error === 'ABORTED') {
+              setStatus({ type: 'error', message: t.errorAborted || 'İşlem iptal edildi.' });
             } else if (data.error) {
               setStatus({ type: 'error', message: data.error });
             } else {
@@ -148,9 +192,14 @@ export default function Home() {
         }
       }
     } catch (error) {
-      setStatus({ type: 'error', message: error.message || t.connectionError });
+      if (error.name === 'AbortError') {
+        setStatus({ type: 'error', message: t.errorAborted || 'İşlem iptal edildi.' });
+      } else {
+        setStatus({ type: 'error', message: error.message || t.connectionError });
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -163,6 +212,10 @@ export default function Home() {
     // CRITICAL: If inputs change, reset serverInfo to force re-validation on next submit
     setServerInfo(null);
     setStatus(null);
+  };
+
+  const handleOptionChange = (key) => {
+    setCloneOptions(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   return (
@@ -202,8 +255,21 @@ export default function Home() {
 
         {loading || logs.length > 0 ? (
           <div className="clone-view">
-            <div className="section-title">{t.liveLogs}</div>
+            <div className="section-title-row">
+              <div className="section-title">{t.liveLogs}</div>
+              {loading && (
+                <div className="live-indicator">
+                  <span className="live-dot"></span>
+                  {t.cloningInProgress || 'İşlem devam ediyor'}
+                </div>
+              )}
+            </div>
             <div className="live-log" ref={logs.length > 0 ? (e => { if (e) e.scrollTop = e.scrollHeight }) : null}>
+              {logs.length === 0 && loading && (
+                <div className="log-entry active">
+                  <span className="text">&gt; {t.cloningStarted}</span>
+                </div>
+              )}
               {logs.map((log, i) => (
                 <div key={i} className={`log-entry ${i === logs.length - 1 ? 'active' : ''}`}>
                   <span className="timestamp">[{log.time}]</span>
@@ -212,19 +278,31 @@ export default function Home() {
               ))}
             </div>
             {status && <div className={`status-message status-${status.type}`}>{status.message}</div>}
-            {!loading && (
-              <button
-                className="back-btn"
-                onClick={() => {
-                  setLoading(false);
-                  setLogs([]);
-                  setStatus(null);
-                  setServerInfo(null);
-                }}
-              >
-                {t.goBack}
-              </button>
-            )}
+
+            <div className="clone-view-actions">
+              {loading && (
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={handleCancel}
+                >
+                  {t.cancelOperation || 'İşlemi İptal Et'}
+                </button>
+              )}
+              {!loading && (
+                <button
+                  className="back-btn"
+                  onClick={() => {
+                    setLoading(false);
+                    setLogs([]);
+                    setStatus(null);
+                    setServerInfo(null);
+                  }}
+                >
+                  {t.goBack}
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -289,6 +367,77 @@ export default function Home() {
                   ⚠️ {t.fastModeWarn}
                 </div>
               )}
+
+              <div className="advanced-toggle-row">
+                <button
+                  type="button"
+                  className="advanced-toggle"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
+                  <span className={`advanced-arrow ${showAdvanced ? 'open' : ''}`}>▸</span>
+                  {t.advancedSettings || 'Gelişmiş Ayarlar'}
+                </button>
+              </div>
+
+              {showAdvanced && (
+                <div className="advanced-options">
+                  <div className="advanced-option-item">
+                    <input
+                      type="checkbox"
+                      id="cloneRoles"
+                      checked={cloneOptions.cloneRoles}
+                      onChange={() => handleOptionChange('cloneRoles')}
+                    />
+                    <label htmlFor="cloneRoles">{t.optRoles || 'Rolleri Kopyala'}</label>
+                  </div>
+                  <div className="advanced-option-item">
+                    <input
+                      type="checkbox"
+                      id="cloneChannels"
+                      checked={cloneOptions.cloneChannels}
+                      onChange={() => handleOptionChange('cloneChannels')}
+                    />
+                    <label htmlFor="cloneChannels">{t.optChannels || 'Kanalları Kopyala'}</label>
+                  </div>
+                  <div className="advanced-option-item">
+                    <input
+                      type="checkbox"
+                      id="cloneEmojis"
+                      checked={cloneOptions.cloneEmojis}
+                      onChange={() => handleOptionChange('cloneEmojis')}
+                    />
+                    <label htmlFor="cloneEmojis">{t.optEmojis || 'Emojileri Kopyala'}</label>
+                  </div>
+                  <div className="advanced-option-item">
+                    <input
+                      type="checkbox"
+                      id="cloneServerName"
+                      checked={cloneOptions.cloneServerName}
+                      onChange={() => handleOptionChange('cloneServerName')}
+                    />
+                    <label htmlFor="cloneServerName">{t.optServerName || 'Sunucu İsmini Kopyala'}</label>
+                  </div>
+                  <div className="advanced-option-item">
+                    <input
+                      type="checkbox"
+                      id="cloneServerIcon"
+                      checked={cloneOptions.cloneServerIcon}
+                      onChange={() => handleOptionChange('cloneServerIcon')}
+                    />
+                    <label htmlFor="cloneServerIcon">{t.optServerIcon || 'Sunucu İkonunu Kopyala'}</label>
+                  </div>
+                  <div className="advanced-option-item">
+                    <input
+                      type="checkbox"
+                      id="cloneServerBanner"
+                      checked={cloneOptions.cloneServerBanner}
+                      onChange={() => handleOptionChange('cloneServerBanner')}
+                    />
+                    <label htmlFor="cloneServerBanner">{t.optServerBanner || 'Sunucu Bannerını Kopyala'}</label>
+                  </div>
+                </div>
+              )}
+
               {rateLimitInfo && typeof rateLimitInfo.remaining === 'number' && (
                 <div className="rate-limit-badge">
                   <span>{t.rateLimitRemaining || 'Kalan hak'}:</span>
@@ -319,11 +468,23 @@ export default function Home() {
 
       <footer>
         <div className="footer-links">
-          <Link href={`/${lang}/about`}>{t.navAbout}</Link>
-          <Link href={`/${lang}/guides`}>{t.navGuides}</Link>
-          <Link href={`/${lang}/privacy`}>{t.navPrivacy}</Link>
-          <Link href={`/${lang}/terms`}>{t.navTerms}</Link>
-          <Link href={`/${lang}/contact`}>{t.navContact}</Link>
+          {loading ? (
+            <>
+              <span className="footer-link-disabled">{t.navAbout}</span>
+              <span className="footer-link-disabled">{t.navGuides}</span>
+              <span className="footer-link-disabled">{t.navPrivacy}</span>
+              <span className="footer-link-disabled">{t.navTerms}</span>
+              <span className="footer-link-disabled">{t.navContact}</span>
+            </>
+          ) : (
+            <>
+              <Link href={`/${lang}/about`}>{t.navAbout}</Link>
+              <Link href={`/${lang}/guides`}>{t.navGuides}</Link>
+              <Link href={`/${lang}/privacy`}>{t.navPrivacy}</Link>
+              <Link href={`/${lang}/terms`}>{t.navTerms}</Link>
+              <Link href={`/${lang}/contact`}>{t.navContact}</Link>
+            </>
+          )}
         </div>
         <div className="copyright">{t.footer}</div>
       </footer>

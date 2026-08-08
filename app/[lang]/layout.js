@@ -1,6 +1,7 @@
 import "../globals.css";
 import { translations } from "@/lib/translations";
 import HeaderIsland from "../components/HeaderIsland";
+import { CloneStatusProvider } from "@/lib/context/CloneStatusContext";
 
 export async function generateMetadata({ params }) {
   const { lang } = await params;
@@ -96,8 +97,10 @@ export default async function RootLayout({ children, params }) {
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <HeaderIsland />
-        {children}
+        <CloneStatusProvider>
+          <HeaderIsland />
+          {children}
+        </CloneStatusProvider>
       </body>
     </html>
   );
