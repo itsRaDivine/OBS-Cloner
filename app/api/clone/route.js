@@ -9,7 +9,7 @@ const GLOBAL_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes safety timeout
 
 export async function POST(request) {
   const body = await request.json();
-  const { userToken, sourceGuildId, targetGuildId, resetTargetServer, password, lang } = body;
+  const { userToken, sourceGuildId, targetGuildId, resetTargetServer, password, lang, cloneOptions } = body;
 
   if (activeClones >= MAX_CONCURRENT_CLONES) {
     return NextResponse.json({ error: 'OVERLOAD' }, { status: 429 });
@@ -26,6 +26,11 @@ export async function POST(request) {
   let isClosed = false;
   let decremented = false;
   let timeoutId;
+
+  // Kendi AbortController'ımızı yönetiyoruz. request.signal'a değil,
+  // stream'in cancel() callback'ine bağlıyoruz — çünkü Next.js'te
+  // request.signal her ortamda güvenilir tetiklenmeyebiliyor.
+  const abortController = new AbortController();
 
   const cleanup = () => {
     if (!decremented) {
@@ -71,7 +76,16 @@ export async function POST(request) {
           targetGuildId,
           resetTargetServer: resetTargetServer || false,
           lang: lang,
-          checkRateLimit: checkAndConsume
+          checkRateLimit: checkAndConsume,
+          abortSignal: abortController.signal,
+          cloneOptions: {
+            cloneRoles: cloneOptions?.cloneRoles !== false,
+            cloneChannels: cloneOptions?.cloneChannels !== false,
+            cloneEmojis: cloneOptions?.cloneEmojis !== false,
+            cloneServerIcon: cloneOptions?.cloneServerIcon !== false,
+            cloneServerBanner: cloneOptions?.cloneServerBanner !== false,
+            cloneServerName: cloneOptions?.cloneServerName !== false
+          }
         }, (progress) => {
           send(progress);
         });
@@ -96,15 +110,17 @@ export async function POST(request) {
             resetAt: err.resetAt,
             message: err.message
           });
+        } else if (err.code === 'ABORTED') {
+          send({ error: 'ABORTED', message: err.message });
         } else {
           send({ error: err.message });
         }
 
-        // Hatalı klonlama da geçmişe kaydedilir
+        // Hatalı/iptal edilen klonlama da geçmişe kaydedilir
         addHistoryEntry({
           sourceGuildId,
           targetGuildId,
-          status: 'error',
+          status: err.code === 'ABORTED' ? 'cancelled' : 'error',
           errorMessage: err.message
         });
       } finally {
@@ -119,8 +135,9 @@ export async function POST(request) {
     },
     cancel() {
       isClosed = true;
+      abortController.abort();
       cleanup();
-      console.log("Client disconnected, closing stream.");
+      console.log("Client disconnected, aborting clone operation.");
     }
   });
 
