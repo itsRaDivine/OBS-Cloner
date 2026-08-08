@@ -2,25 +2,57 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useCloneStatus } from '@/lib/context/CloneStatusContext';
+import { translations } from '@/lib/translations';
 
 export default function HeaderIsland() {
   const params = useParams();
   const router = useRouter();
   const lang = params?.lang || 'tr';
+  const t = translations[lang] || translations.tr;
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const { isCloning } = useCloneStatus();
+
+  const guardNavigation = (e) => {
+    if (isCloning) {
+      e.preventDefault();
+      const msg = t.navigationBlocked ||
+        'Klonlama işlemi devam ediyor. Sayfadan ayrılırsanız işlem iptal olacaktır. Devam etmek istiyor musunuz?';
+      if (window.confirm(msg)) {
+        return true; // Kullanıcı onayladı, navigasyona izin ver
+      }
+      return false;
+    }
+    return true;
+  };
 
   const handleLangChange = (newLang) => {
+    if (isCloning) {
+      const msg = t.navigationBlocked ||
+        'Klonlama işlemi devam ediyor. Dil değiştirirseniz işlem iptal olacaktır. Devam etmek istiyor musunuz?';
+      if (!window.confirm(msg)) return;
+    }
     setIsLangOpen(false);
     document.cookie = `obscloner_lang=${newLang}; path=/; max-age=31536000`;
     router.push(`/${newLang}`);
   };
 
+  const handleLogoClick = (e) => {
+    if (!guardNavigation(e)) return;
+  };
+
   return (
     <header className="header-island">
-      <a href="https://aiobsessive.com" className="logo-link" title="ObsessiveAI Platformuna Git">
+      <a
+        href="https://aiobsessive.com"
+        className={`logo-link ${isCloning ? 'nav-disabled' : ''}`}
+        title="ObsessiveAI Platformuna Git"
+        onClick={handleLogoClick}
+      >
         <div className="logo-section">
           <img src="/favicon.ico" alt="Logo" className="logo-img" />
           <span className="site-name">OBS CLONER</span>
+          {isCloning && <span className="cloning-dot" title={t.cloningInProgress || 'Klonlama devam ediyor'}></span>}
         </div>
       </a>
 
